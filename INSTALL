@@ -1,0 +1,8 @@
+# Install l-py
+conda create -n lpy openalea.lpy -c openalea
+
+# Activate L-Py environment
+source activate lpy
+
+# Run L-Py
+lpy
