@@ -1,0 +1,64 @@
+import math
+#H-head, turns into TH if there is space(???), else T
+#T-tail, normally doesn't change, can sometimes create branch
+width=0.5
+length=0.5
+positions=[]#tuples (x,y)
+min_dist=4
+def getDistance(x1,y1,x2,y2):
+  return math.sqrt(((x1-x2)**2)+((y1-y2)**2)) #(~-180, 180)
+  
+  #!!! probably casting to floats is needed
+  
+def getAngle(x1,y1,x2,y2):
+  #x1,y1 start
+  return  math.degrees(math.atan2((x2-x1),(y2-y1)))
+  
+def rotate(x,y,xd,yd):
+  #xd,yd heading direction, probably from ?H
+  turn_right=0
+  turn_left=0
+  for (a,b) in positions:
+    if getDistance(x,y,a,b)<min_dist:
+      glob_angle=getAngle(x,y,a,b)
+      direction=math.degrees(math.atan2(xd,yd))
+      angle=glob_angle-direction#check for extreme values    !!!
+      if angle>=0:
+        if angle>110:
+          pass# not important what's behind
+        elif angle<=10:
+          turn_left=max(turn_left,30)
+        elif angle>10 and angle<=45:
+          turn_left=max(turn_left,15)
+        elif angle>45 and angle<=110:
+          turn_left=max(turn_left,5)
+      else:
+        if angle<-110:
+          pass# not important what's behind
+        elif angle>=-10:
+          turn_right=max(turn_right,30)
+        elif angle<-10 and angle>=-45:
+          turn_right=max(turn_right,15)
+        elif angle<-45 and angle>=-110:
+          turn_right=max(turn_right,5)
+       
+
+  rotation
+  
+Axiom: _(width) H
+
+derivation length: 10
+production:
+?P(x,y,z) :
+  print("B")
+  produce 
+H:
+  print("A")
+  produce T H ?P
+
+
+interpretation:
+H: produce SetColor(1) F(length,width)
+T: produce SetColor(2) F(length,width)
+
+endlsystem
