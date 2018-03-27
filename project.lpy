@@ -49,11 +49,12 @@ Axiom: _(width) H
 derivation length: 10
 production:
 ?P(x,y,z) :
-  print("B")
-  produce 
+  print((x,y,z))
+  produce
+   
 H:
   print("A")
-  produce T H ?P
+  produce T H ?P(0,0,0)
 
 
 interpretation:

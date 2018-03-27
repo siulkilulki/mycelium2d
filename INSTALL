@@ -1,8 +1,13 @@
 # Install l-py
 conda create -n lpy openalea.lpy -c openalea
 
+#on Linux wrong boost might by installed, if its boost=1.65 then run below command
+conda install -c openalea boost=1.66.0
+
 # Activate L-Py environment
 source activate lpy
+# or
+conda activate lpy
 
 # Run L-Py
 lpy
