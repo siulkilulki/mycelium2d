@@ -1,10 +1,17 @@
 import math
+
 #H-head, turns into TH if there is space(???), else T
 #T-tail, normally doesn't change, can sometimes create branch
-width=0.5
-length=0.5
-positions=[]#tuples (x,y)
-min_dist=4
+width = 0.5
+length = 0.5
+segments = [] #line segments ((x1,y1), (x2, y2)) <--- position of segment,
+
+#starting values
+position = (0,0) 
+heading = (0,1)
+position = (0,1)
+
+min_dist = 4
 def getDistance(x1,y1,x2,y2):
   return math.sqrt(((x1-x2)**2)+((y1-y2)**2)) #(~-180, 180)
   
@@ -43,18 +50,46 @@ def rotate(x,y,xd,yd):
           turn_right=max(turn_right,5)
        
   #todo: add if turn_left ==0 of right==0, then turn, if both <>0 then look what's ahead and if blocked return something like(0,true) (rotation, stop)
-  
+
+def ccw(A,B,C):
+  return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+
+# Return true if line segments AB and CD intersect
+def intersect(A,B,C,D):
+  return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D) 
+
+def intersect_any(new_segment):
+    for segment in reversed(segments):
+      if intersect(new_segment[0], new_segment[1], segment[0], segment[1]):
+        return True
+    return False
+
+
 Axiom: _(width) H
 
 derivation length: 10
 production:
-?P(x,y,z) :
-  print((x,y,z))
+?P(z,x,y, type_) : # we have y mapped to x, z mapped to y 
+  global position
+  if type_ == 0:
+    position = (x,y)
+  else: 
+    segments.append((position, (x,y)))
+    print(segments)
+    produce
+    
+?H(z,x,y):
+  heading = (x,y)
+  print('heading: {}'.format((x,y)))
   produce
-   
+
 H:
-  print("A")
-  produce T H ?P(0,0,0)
+  print("H")
+  next_position = position + heading #
+  if not intersect_any((position, next_position)):
+    produce T ?P(0,0,0,0) ?H(0,0,0) H ?P(0,0,0,1)
+  else:
+    produce
 
 
 interpretation:
