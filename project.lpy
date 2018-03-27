@@ -1,10 +1,11 @@
 import math
+import random
 
 #H-head, turns into TH if there is space(???), else T
 #T-tail, normally doesn't change, can sometimes create branch
-width = 0.5
-length = 0.5
-segments = [] #line segments ((x1,y1), (x2, y2)) <--- position of segment,
+width = 0.1 
+length = 1
+segments = set() #line segments ((x1,y1), (x2, y2)) <--- position of segment, 
 
 #starting values
 position = (0,0) 
@@ -59,41 +60,61 @@ def intersect(A,B,C,D):
   return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D) 
 
 def intersect_any(new_segment):
-    for segment in reversed(segments):
+    for segment in segments:
+      if new_segment[0] == segment[1]:
+        continue
       if intersect(new_segment[0], new_segment[1], segment[0], segment[1]):
         return True
     return False
 
 
-Axiom: _(width) H
+Axiom: _(width) HP 
 
-derivation length: 10
+derivation length: 60
 production:
 ?P(z,x,y, type_) : # we have y mapped to x, z mapped to y 
   global position
   if type_ == 0:
     position = (x,y)
+    produce
   else: 
-    segments.append((position, (x,y)))
+    segments.add((position, (x,y)))
     print(segments)
     produce
     
 ?H(z,x,y):
+  global heading
   heading = (x,y)
-  print('heading: {}'.format((x,y)))
+  print('heading: {}'.format(heading))
   produce
 
+HP:
+  produce ?P(0,0,0,0) ?H(0,0,0) H ?P(0,0,0,1)
+
 H:
-  print("H")
-  next_position = position + heading #
+  global position
+  print('position: {}'.format(position))
+  next_position = (position[0] + heading[0], position[1] + heading[1]) 
+  print('next_point: {}'.format((position, next_position)))
   if not intersect_any((position, next_position)):
-    produce T ?P(0,0,0,0) ?H(0,0,0) H ?P(0,0,0,1)
+    produce TP HP
   else:
     produce
 
+TP:
+  produce ?P(0,0,0,0) T ?P(0,0,0,1)
 
-interpretation:
-H: produce SetColor(1) F(length,width)
+T:
+  r = random.random() 
+  if r > 0.5: 
+    angle = 40 
+    produce [+(angle) HP] 
+  produce S
+
+interpretation: 
+# H: produce SetColor(1) F(length,width)
+H: produce f(length)
 T: produce SetColor(2) F(length,width)
+S: produce SetColor(3) F(length,width)
 
 endlsystem
