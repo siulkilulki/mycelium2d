@@ -3,10 +3,10 @@ import random
 
 #H-head, turns into TH if there is space(???), else T
 #T-tail, normally doesn't change, can sometimes create branch
-MAX_DISTANCE = 6
-MAX_MULTIPLIER = 3
-ANGLE = 10
-SCANER_ANGLE = 30
+MAX_DISTANCE = 8
+MAX_MULTIPLIER = 6
+ANGLE = 5
+SCANER_ANGLE = 35
 width = 0.1 
 length = 1
 segments = set() #line segments ((x1,y1), (x2, y2)) <--- position of segment, 
@@ -26,7 +26,7 @@ def intersect_any(new_segment):
         return True
     return False
 
-Axiom: _(width) RHP(1, MAX_DISTANCE) 
+Axiom: _(width) [RHP(1, MAX_DISTANCE)] [+(90) RHP(1, MAX_DISTANCE)] [+(180) RHP(1, MAX_DISTANCE)] [+(270) RHP(1, MAX_DISTANCE)]
 
 derivation length: 300 
 production:
