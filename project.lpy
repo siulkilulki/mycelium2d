@@ -3,54 +3,13 @@ import random
 
 #H-head, turns into TH if there is space(???), else T
 #T-tail, normally doesn't change, can sometimes create branch
+MAX_DISTANCE = 6
+MAX_MULTIPLIER = 3
+ANGLE = 10
+SCANER_ANGLE = 30
 width = 0.1 
 length = 1
 segments = set() #line segments ((x1,y1), (x2, y2)) <--- position of segment, 
-
-#starting values
-position = (0,0) 
-heading = (0,1)
-position = (0,1)
-
-min_dist = 4
-def getDistance(x1,y1,x2,y2):
-  return math.sqrt(((x1-x2)**2)+((y1-y2)**2)) #(~-180, 180)
-  
-  #!!! probably casting to floats is needed
-  
-def getAngle(x1,y1,x2,y2):
-  #x1,y1 start
-  return  math.degrees(math.atan2((x2-x1),(y2-y1)))
-  
-def rotate(x,y,xd,yd):
-  #xd,yd heading direction, probably from ?H
-  turn_right=0
-  turn_left=0
-  for (a,b) in positions:
-    if getDistance(x,y,a,b)<min_dist:
-      glob_angle=getAngle(x,y,a,b)
-      direction=math.degrees(math.atan2(xd,yd))
-      angle=glob_angle-direction#check for extreme values    !!!
-      if angle>=0:
-        if angle>110:
-          pass# not important what's behind
-        elif angle<=10:
-          turn_left=max(turn_left,30)
-        elif angle>10 and angle<=45:
-          turn_left=max(turn_left,15)
-        elif angle>45 and angle<=110:
-          turn_left=max(turn_left,5)
-      else:
-        if angle<-110:
-          pass# not important what's behind
-        elif angle>=-10:
-          turn_right=max(turn_right,30)
-        elif angle<-10 and angle>=-45:
-          turn_right=max(turn_right,15)
-        elif angle<-45 and angle>=-110:
-          turn_right=max(turn_right,5)
-       
-  #todo: add if turn_left ==0 of right==0, then turn, if both <>0 then look what's ahead and if blocked return something like(0,true) (rotation, stop)
 
 def ccw(A,B,C):
   return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
@@ -67,11 +26,11 @@ def intersect_any(new_segment):
         return True
     return False
 
-
-Axiom: _(width) RHP 
+Axiom: _(width) RHP(1, MAX_DISTANCE) 
 
 derivation length: 300 
 production:
+
 ?P(z,x,y, type_) : # we have y mapped to x, z mapped to y 
   global position
   if type_ == 0:
@@ -79,50 +38,64 @@ production:
     produce
   else: 
     segments.add((position, (x,y)))
-    # print(segments)
     produce
     
-?H(z,x,y):
+?H(z,x,y,type_):
+  global heading_left
+  global heading_right
   global heading
-  heading = (x,y)
-  # print('heading: {}'.format(heading))
+  if type_ == 0:
+    heading_left = (x,y)
+  if type_ == 1:
+    heading_right = (x,y)
+  if type_ == 2:
+    heading = (x,y)
   produce
 
-HP(x):
-  produce ?P(0,0,0,0) ?H(0,0,0) H(x) ?P(0,0,0,1)
+HP(x, multiplier, distance):
+  produce ?P(0,0,0,0) [+(SCANER_ANGLE)?H(0,0,0,0)] [-(SCANER_ANGLE) ?H(0,0,0,1)] ?H(0,0,0,2) H(x, multiplier, distance) ?P(0,0,0,1)
 
-H(x):
+H(x, multiplier, distance):
   global position
-  # print('position: {}'.format(position))
+  next_position_left = (position[0] + heading_left[0], position[1] + heading_left[1]) 
+  next_position_right = (position[0] + heading_right[0], position[1] + heading_right[1]) 
   next_position = (position[0] + heading[0], position[1] + heading[1]) 
-  # print('next_point: {}'.format((position, next_position)))
-  if not intersect_any((position, next_position)):
-    if x == 0:
-      produce AHP RHP
-    else:
-      produce SP HP(x-1)
-  else:
+  if intersect_any((position, next_position_left)) or intersect_any((position, next_position_left)) or intersect_any((position, next_position_right)):
     produce
+  else:
+    next_position_left_d = (position[0] + heading_left[0]*distance, position[1] + heading_left[1]*distance) 
+    next_position_right_d = (position[0] + heading_right[0]*distance, position[1] + heading_right[1]*distance) 
+    left_collision = intersect_any((position, next_position_left_d))
+    right_collision = intersect_any((position, next_position_right_d))
+    angle = 0
+
+    if not left_collision and right_collision:
+      angle = ANGLE # +(10)
+    elif left_collision and not right_collision:
+      angle = -ANGLE # +(-10)
+
+    if left_collision or right_collision:
+      multiplier = multiplier + 1 if multiplier < MAX_MULTIPLIER else MAX_MULTIPLIER
+      distance = distance - 1 if distance > 1 else 1
+      angle *= multiplier
+    else:
+      distance = distance + 1 if distance < MAX_DISTANCE else MAX_DISTANCE
+      multiplier = multiplier - 1 if multiplier > 1 else 1
+    print('angle: {}'.format(angle))
+
+    if x == 0:
+      produce AHP +(angle) RHP(multiplier, distance)
+    else:
+      produce SP +(angle) HP(x-1, multiplier, distance)
     
-RHP:
-  r = random.randint(3, 10)
-  produce HP(r)
+RHP(multiplier, distance):
+  r = random.randint(3, 7)
+  produce HP(r, multiplier, distance)
 
 AHP:
   angle = random.randint(-30, 30)
   angle = 90 + angle if angle < 0 else -90 + angle
-  produce [+(angle) RHP] 
-
-# TP:
-#   produce ?P(0,0,0,0) T ?P(0,0,0,1)
-
-# T:
-#   r = random.random() 
-#   if r > 0.5: 
-#     angle = random.randint(-30, 30)
-#     angle = 90 + angle if angle < 0 else -90 + angle
-#     produce [+(angle) HP] 
-#   produce SP
+  produce [+(angle) RHP(1, MAX_DISTANCE)] 
 
 SP:
   produce ?P(0,0,0,0) S ?P(0,0,0,1)
@@ -130,7 +103,6 @@ SP:
 interpretation: 
 # H: produce SetColor(1) F(length,width)
 H: produce f(length)
-# T: produce SetColor(2) F(length,width)
 S: produce SetColor(3) F(length,width)
 
 endlsystem
