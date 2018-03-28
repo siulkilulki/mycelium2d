@@ -68,9 +68,9 @@ def intersect_any(new_segment):
     return False
 
 
-Axiom: _(width) HP 
+Axiom: _(width) RHP 
 
-derivation length: 60
+derivation length: 300 
 production:
 ?P(z,x,y, type_) : # we have y mapped to x, z mapped to y 
   global position
@@ -79,42 +79,58 @@ production:
     produce
   else: 
     segments.add((position, (x,y)))
-    print(segments)
+    # print(segments)
     produce
     
 ?H(z,x,y):
   global heading
   heading = (x,y)
-  print('heading: {}'.format(heading))
+  # print('heading: {}'.format(heading))
   produce
 
-HP:
-  produce ?P(0,0,0,0) ?H(0,0,0) H ?P(0,0,0,1)
+HP(x):
+  produce ?P(0,0,0,0) ?H(0,0,0) H(x) ?P(0,0,0,1)
 
-H:
+H(x):
   global position
-  print('position: {}'.format(position))
+  # print('position: {}'.format(position))
   next_position = (position[0] + heading[0], position[1] + heading[1]) 
-  print('next_point: {}'.format((position, next_position)))
+  # print('next_point: {}'.format((position, next_position)))
   if not intersect_any((position, next_position)):
-    produce TP HP
+    if x == 0:
+      produce AHP RHP
+    else:
+      produce SP HP(x-1)
   else:
     produce
+    
+RHP:
+  r = random.randint(3, 10)
+  produce HP(r)
 
-TP:
-  produce ?P(0,0,0,0) T ?P(0,0,0,1)
+AHP:
+  angle = random.randint(-30, 30)
+  angle = 90 + angle if angle < 0 else -90 + angle
+  produce [+(angle) RHP] 
 
-T:
-  r = random.random() 
-  if r > 0.5: 
-    angle = 40 
-    produce [+(angle) HP] 
-  produce S
+# TP:
+#   produce ?P(0,0,0,0) T ?P(0,0,0,1)
+
+# T:
+#   r = random.random() 
+#   if r > 0.5: 
+#     angle = random.randint(-30, 30)
+#     angle = 90 + angle if angle < 0 else -90 + angle
+#     produce [+(angle) HP] 
+#   produce SP
+
+SP:
+  produce ?P(0,0,0,0) S ?P(0,0,0,1)
 
 interpretation: 
 # H: produce SetColor(1) F(length,width)
 H: produce f(length)
-T: produce SetColor(2) F(length,width)
+# T: produce SetColor(2) F(length,width)
 S: produce SetColor(3) F(length,width)
 
 endlsystem
